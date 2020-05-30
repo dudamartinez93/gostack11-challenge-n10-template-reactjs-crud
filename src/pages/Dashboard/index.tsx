@@ -27,7 +27,9 @@ const Dashboard: React.FC = () => {
 
   useEffect(() => {
     async function loadFoods(): Promise<void> {
-      // TODO LOAD FOODS
+      const foodsLoaded = await api.get('/foods');
+
+      setFoods(foodsLoaded.data);
     }
 
     loadFoods();
@@ -37,7 +39,13 @@ const Dashboard: React.FC = () => {
     food: Omit<IFoodPlate, 'id' | 'available'>,
   ): Promise<void> {
     try {
-      // TODO ADD A NEW FOOD PLATE TO THE API
+      const newFoodPlate: Omit<IFoodPlate, 'id'> = {
+        ...food,
+        available: true,
+      };
+      const addedFoodResponse = await api.post('/foods', newFoodPlate);
+
+      setFoods([...foods, addedFoodResponse.data]);
     } catch (err) {
       console.log(err);
     }
@@ -46,11 +54,42 @@ const Dashboard: React.FC = () => {
   async function handleUpdateFood(
     food: Omit<IFoodPlate, 'id' | 'available'>,
   ): Promise<void> {
-    // TODO UPDATE A FOOD PLATE ON THE API
+    try {
+      let editedFood: IFoodPlate = editingFood;
+
+      const foodsUpdated: IFoodPlate[] = foods.map(verifiedFood => {
+        if (verifiedFood.id === editingFood.id) {
+          editedFood = {
+            ...food,
+            available: editingFood.available,
+            id: editingFood.id,
+          };
+          return editedFood;
+        }
+        return verifiedFood;
+      });
+
+      if (editedFood === editingFood) {
+        throw new Error(
+          'Não foi possível encontrar o id do prato a ser editado',
+        );
+      }
+
+      await api.put(`/foods/${editingFood.id}`, editedFood);
+
+      setFoods(foodsUpdated);
+    } catch (err) {
+      console.log(err);
+    }
   }
 
   async function handleDeleteFood(id: number): Promise<void> {
-    // TODO DELETE A FOOD PLATE FROM THE API
+    try {
+      await api.delete(`/foods/${id}`);
+      setFoods(foods.filter(food => food.id !== id));
+    } catch (err) {
+      console.log(err);
+    }
   }
 
   function toggleModal(): void {
@@ -62,7 +101,36 @@ const Dashboard: React.FC = () => {
   }
 
   function handleEditFood(food: IFoodPlate): void {
-    // TODO SET THE CURRENT EDITING FOOD ID IN THE STATE
+    setEditingFood(food);
+    toggleEditModal();
+  }
+
+  async function handleEditFoodAvailability(food: IFoodPlate): Promise<void> {
+    try {
+      const editedFood: IFoodPlate = {
+        ...food,
+        available: !food.available,
+      };
+
+      const foodsUpdated: IFoodPlate[] = foods.map(verifiedFood => {
+        if (verifiedFood.id === food.id) {
+          return editedFood;
+        }
+        return verifiedFood;
+      });
+
+      if (editedFood === food) {
+        throw new Error(
+          'Não foi possível encontrar o id do prato a ser editado a disponibilidade',
+        );
+      }
+
+      await api.put(`/foods/${food.id}`, editedFood);
+
+      setFoods(foodsUpdated);
+    } catch (err) {
+      console.log(err);
+    }
   }
 
   return (
@@ -88,6 +156,7 @@ const Dashboard: React.FC = () => {
               food={food}
               handleDelete={handleDeleteFood}
               handleEditFood={handleEditFood}
+              handleEditFoodAvailability={handleEditFoodAvailability}
             />
           ))}
       </FoodsContainer>

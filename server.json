@@ -23,6 +23,14 @@
       "price": "25.90",
       "available": true,
       "image": "https://storage.googleapis.com/golden-wind/bootcamp-gostack/desafio-food/food3.png"
+    },
+    {
+      "image": "wfefs",
+      "name": "aedsed",
+      "price": "eded",
+      "description": "dedsed",
+      "available": true,
+      "id": 4
     }
   ]
 }
